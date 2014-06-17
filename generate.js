@@ -11,10 +11,10 @@ var authenticator = new login.BasicAuthenticator({
 	client : {
 		scrypt : {
 			n : 16384,
-			r : 8,
+			r : 4,
 			p : 1,
 			salt : 'd0b402c78c865309c594d24dc395f52ecc4cc9946f22f22ae19f46d9b13618da',
-			length : 256
+			keyLength : 256
 		}
 	},
 	users : { } 
@@ -24,13 +24,14 @@ var args = process.argv.slice(2);
 var pass = args.shift();
 if(!pass)
 	console.log("Please supply password as script argument");
-
-generate();
+else
+	generate();
 
 function generate() {
 
 	var ts = Date.now();
 	authenticator.generateExchangeHash(pass, function(err, exchangeHash) {
+		console.log("EXCHANGE HASH:",arguments);
 		ts = Date.now() - ts;
 		console.log("ts:",ts);
 		console.log('\nEXCHANGE:\n'+exchangeHash);

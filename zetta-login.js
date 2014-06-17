@@ -95,13 +95,13 @@ function Login(core, authenticator, options) {
         var o = getLoginTracking(ip);
 
         if(options.throttle && o.unblock_ts > ts)
-            return res.json(401, { error : "Your access to the login system remains blocked for "+getDurationString(o.unblock_ts-ts) }).end();
+            return res.json(401, { error : "Your access to the login system remains blocked for "+getDurationString(o.unblock_ts-ts), throttle : true }).end();
         o.attempts++;        
         if(options.throttle && o.attempts > self.throttle.attempts) {
             o.attempts = 0;
             o.failures++;
             o.unblock_ts = ts+(self.throttle.min*((o.failures+1)/2)*60*1000);
-            res.json(401, { error : "Your access to the login system has been blocked for "+getDurationString(o.unblock_ts-ts) }).end();
+            res.json(401, { error : "Your access to the login system has been blocked for "+getDurationString(o.unblock_ts-ts), throttle : true }).end();
             return;
         }
 
@@ -133,7 +133,7 @@ function Login(core, authenticator, options) {
         var ip = getClientIp(req);
         var o = getLoginTracking(ip);
         if(options.throttle && o.unblock_ts > ts)
-            return res.json(401, { error : "Your access to the login system remains blocked for another "+getDurationString(o.unblock_ts-ts) }).end();
+            return res.json(401, { error : "Your access to the login system remains blocked for another "+getDurationString(o.unblock_ts-ts), throttle : true }).end();
         
         self.authenticate({ 
         	username : req.body.username, 
@@ -148,7 +148,7 @@ function Login(core, authenticator, options) {
                     o.attempts = 0;
                     o.failures++;
                     o.unblock_ts = ts+(self.throttle.min*((o.failures+1)/2)*60*1000);
-                    res.json(401, { error : "Your access to the login system has been blocked for "+getDurationString(o.unblock_ts-ts) }).end();
+                    res.json(401, { error : "Your access to the login system has been blocked for "+getDurationString(o.unblock_ts-ts), throttle : true }).end();
                 }
                 else {
 		            if(err)

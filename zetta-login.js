@@ -95,45 +95,43 @@ function Login(core, authenticator, options) {
         var o = getLoginTracking(ip);
 
         if(options.throttle && o.unblock_ts > ts)
-            return res.json(401, { error : "Your access to the login system remains blocked for "+getDurationString(o.unblock_ts-ts), throttle : true }).end();
+            return res.json(401, { error : "Your access to the login system remains blocked for "+getDurationString(o.unblock_ts-ts), throttle : true });
         o.attempts++;        
         if(options.throttle && o.attempts > self.throttle.attempts) {
             o.attempts = 0;
             o.failures++;
             o.unblock_ts = ts+(self.throttle.min*((o.failures+1)/2)*60*1000);
-            res.json(401, { error : "Your access to the login system has been blocked for "+getDurationString(o.unblock_ts-ts), throttle : true }).end();
-            return;
+            return res.json(401, { error : "Your access to the login system has been blocked for "+getDurationString(o.unblock_ts-ts), throttle : true });
         }
-
 		var auth = self.authenticator.getClientAuth(function(err, auth) {
 			req.session.auth = auth;
-			res.json({ auth : auth }).end();
+			res.json(200, { auth : auth });
 		});
 	}
 
 	self.getLogout = function(req, res, next) {
 		var user = req.session.user;
 		if(!user)
-			return res.send(401).res.end();
+			return res.send(401);
 		delete req.session.user;
 		self.emit('user-logout', user);
-		res.send(200).end();
+		res.send(200);
 	}
 
 	self.postLogin = function(req, res, next) {
         res.type('application/json');
 
         if(!req.session.auth)
-            return res.json(401, { error : "User name and password required" }).end();
+            return res.json(401, { error : "User name and password required" });
 
         if(!req.body.username || !req.body.password || !req.body.sig)
-            return res.json(401, { error : "User name and password required" }).end();
+            return res.json(401, { error : "User name and password required" });
 
         var ts = Date.now();
         var ip = getClientIp(req);
         var o = getLoginTracking(ip);
         if(options.throttle && o.unblock_ts > ts)
-            return res.json(401, { error : "Your access to the login system remains blocked for another "+getDurationString(o.unblock_ts-ts), throttle : true }).end();
+            return res.json(401, { error : "Your access to the login system remains blocked for another "+getDurationString(o.unblock_ts-ts), throttle : true });
         
         self.authenticate({ 
         	username : req.body.username, 
@@ -148,31 +146,31 @@ function Login(core, authenticator, options) {
                     o.attempts = 0;
                     o.failures++;
                     o.unblock_ts = ts+(self.throttle.min*((o.failures+1)/2)*60*1000);
-                    res.json(401, { error : "Your access to the login system has been blocked for "+getDurationString(o.unblock_ts-ts), throttle : true }).end();
+                    res.json(401, { error : "Your access to the login system has been blocked for "+getDurationString(o.unblock_ts-ts), throttle : true });
                 }
                 else {
 		            if(err)
-		                res.json(401, err).end();
+		                res.json(401, err);
 		            else
-	                    res.json(401, { error : "Wrong login credentials" }).end();
+	                    res.json(401, { error : "Wrong login credentials" });
                 }
             }
             else
             {
                 if(user.blocked || user.blacklisted) {
-                    res.json(401, { error : "User access blocked by administration"}).end();
+                    res.json(401, { error : "User access blocked by administration"});
                 }
                 else {
 					self.validateUser(user, function(err, userOk) {
 			            if(err)
-			                res.json(401, err).end();
+			                res.json(401, err);
 			            else 
 			            {
 			                delete self.loginTracking[ip];
 			                req.session.user = user;
 			                delete req.session.auth;
 				            self.emit('user-login', user);
-			                res.json({ success : true }).end();
+			                res.json({ success : true });
 			            }
 					})
 				}

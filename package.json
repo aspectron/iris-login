@@ -1,0 +1,42 @@
+{
+  "name": "zetta-login",
+  "description": "Zetta Toolkit - User Login Framework",
+  "version": "0.0.1",
+  "author": {
+    "name": "ASPECTRON Inc.",
+    "email": "info@aspectron.com"
+  },
+  "dependencies": {
+    "underscore" : "*",
+    "serve-static" : "*",
+    "bs58" : "*"
+  },
+  "keywords": [
+    "utilities",
+    "framework",
+    "json",
+    "rpc",
+    "zetta",
+    "login"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/aspectron/zetta-login"
+  },
+  "main" : "zetta-login.js",
+  "files": [
+    "README.md"
+  ],
+  "scripts": {
+    "prepublish": "npm prune"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "readmeFilename": "README.md",
+  "bugs": {
+    "url": "https://github.com/aspectron/zetta-login/issues"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/aspectron/zetta-login"
+}

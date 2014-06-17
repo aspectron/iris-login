@@ -116,7 +116,7 @@ function Login(core, authenticator, options) {
 		if(!user)
 			return res.send(401).res.end();
 		delete req.session.user;
-		self.on('user-logout', user);
+		self.emit('user-logout', user);
 		res.send(200).end();
 	}
 
@@ -328,7 +328,7 @@ function Authenticator(core, options) {
 
 	    	var hash = scrypt.crypto_scrypt(scrypt.encode_utf8(password),
 					      hex2uint8array(sc.salt),
-					      sc.n, sc.r, sc.p, sc.length);
+					      sc.n, sc.r, sc.p, sc.keyLength);
 	    	callback(null, scrypt.to_hex(hash));
 		}
 	}
@@ -523,13 +523,15 @@ var Client = function() {
 	}
 
 	self.encrypt = function(username, password, salt, callback) {
+		if(!username || !password)
+			return callback({ error : "Need username and password."});
 		var hash = null;
 		if(self.args.scrypt) {
 			var ts = Date.now();
 			var sc = self.args.scrypt;
 	    	hash = self.scrypt.crypto_scrypt(self.scrypt.encode_utf8(password),
 					      hex2uint8array(sc.salt),
-					      sc.n, sc.r, sc.p, sc.length);
+					      sc.n, sc.r, sc.p, sc.keyLength);
 	    	hash = self.scrypt.to_hex(hash);
 		}
 		else
@@ -564,6 +566,8 @@ var Client = function() {
 	}
 
 	self.post = function(username, password, callback) {
+		if(!username || !password)
+			return callback({ error : "Please enter user name and password"});
 		post(self.path+'/challenge', {}, function(err, challenge) {
 			if(err)
 				return callback(err);

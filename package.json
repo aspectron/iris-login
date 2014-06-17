@@ -25,6 +25,14 @@
   },
   "main" : "zetta-login.js",
   "files": [
+  "zetta-login.js",
+  "generate.js",
+  "scrypt.js",
+  "views/login.js",
+  "http/progress.gif",
+  "http/jquery.min.js",
+  "http/hmac-sha256.js",
+  "http/scrypt.js",
     "README.md"
   ],
   "scripts": {

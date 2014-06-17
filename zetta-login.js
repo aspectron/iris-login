@@ -449,7 +449,7 @@ var Client = function() {
 
 	var files = [
 		"/login/resources/hmac-sha256.js",
-		"/login/resources/js-scrypt/browser/scrypt.js",
+		"/login/resources/scrypt.js",
 		"/login/resources/jquery.min.js"
 	];
 

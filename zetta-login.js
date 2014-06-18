@@ -109,12 +109,21 @@ function Login(core, authenticator, options) {
 		});
 	}
 
-	self.getLogout = function(req, res, next) {
+	self.logout = function(req, res, next) {
 		var user = req.session.user;
 		if(!user)
 			return res.send(401);
 		delete req.session.user;
 		self.emit('user-logout', user);
+	}
+
+	self.getLogout = function(req, res, next) {
+		self.logout.apply(self, arguments);
+		res.redirect(options.logoutRedirect || '/');
+	}
+
+	self.postLogout = function(req, res, next) {
+		self.logout.apply(self, arguments);
 		res.send(200);
 	}
 
@@ -207,6 +216,7 @@ function Login(core, authenticator, options) {
 	self.init = function(app) {
 		var _path = options.path || '';
 		app.get(_path+'/logout', self.getLogout);
+		app.post(_path+'/logout', self.postLogout);
 		app.get(_path+'/login', self.getLogin);
 		app.post(_path+'/challenge', self.postChallenge);
 		app.post(_path+'/login', self.postLogin);
@@ -350,7 +360,6 @@ function Authenticator(core, options) {
 	}
 
 	self.validateSignature = function(args, callback) {
-		console.log(args);
 		var sig = crypto.createHmac('sha256', new Buffer(args.auth, 'hex')).update(new Buffer(args.password, 'hex')).digest('hex');
 		if(args.sig != sig)
 			return false;

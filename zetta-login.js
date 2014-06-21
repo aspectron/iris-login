@@ -179,6 +179,7 @@ function Login(core, authenticator, options) {
 			                req.session.user = user;
 			                delete req.session.auth;
 				            self.emit('user-login', user);
+				            (self.authenticator instanceof events.EventEmitter) && self.authenticator.emit('user-login', user);
 			                res.json({ success : true });
 			            }
 					})
@@ -243,6 +244,7 @@ util.inherits(Login, events.EventEmitter);
 
 function Authenticator(core, options) {
 	var self = this;
+	events.EventEmitter.call(self);
 	self.client = options.client;
 
 	self.iterations = options.iterations || 100000;
@@ -382,6 +384,7 @@ function Authenticator(core, options) {
 		})
 	}
 }
+util.inherits(Authenticator, events.EventEmitter);
 
 function BasicAuthenticator(core, options) {
 	var self = this;
@@ -409,6 +412,7 @@ function BasicAuthenticator(core, options) {
 		})
 	}
 }
+util.inherits(BasicAuthenticator, Authenticator);
 
 function MongoDbAuthenticator(core, options) {
 	var self = this;
@@ -442,6 +446,7 @@ function MongoDbAuthenticator(core, options) {
         })
 	})
 }
+util.inherits(MongoDbAuthenticator, Authenticator);
 
 function ZettaRpcAuthenticator(core, options) {
 	var self = this;
@@ -465,6 +470,7 @@ function ZettaRpcAuthenticator(core, options) {
 		})
 	}
 }
+util.inherits(ZettaRpcAuthenticator, Authenticator);
 
 
 var Client = function() {

@@ -29,7 +29,7 @@ var events = require('events');
 var util = require('util');
 var crypto = require('crypto');
 var scrypt = require('./scrypt');
-var base58 = require('bs58');
+var base58 = require('zetta-base58');
 var path = require('path');
 var ServeStatic = require('serve-static');
 
@@ -261,16 +261,24 @@ function Authenticator(core, options) {
 	    return  base58.encode(new Buffer(crypted, 'binary'));
 	}
 	 
-	function decrypt(text) {
-		if(!text || !options.cipher) {
-			return text;
-		}
+	function decrypt(text, callback) {
+		if(!text || !options.cipher)
+			return callback(null, text);
+		
+		console.log("login1".redBG.bold, arguments);
+
+
 		var key = _.isString(options.key) ? new Buffer(options.key,'hex') : options.key;
-		var data = base58.decode(text);
-	    var decipher = crypto.createDecipher(options.cipher, key);
-	    var decrypted = decipher.update(data, 'binary', 'utf8');
-	    decrypted += decipher.final('utf8');
-	    return decrypted;
+		base58.decode(text, function(err, data) {
+			console.log("login2".redBG.bold, arguments);
+			if(err)
+				return callback(err);
+
+		    var decipher = crypto.createDecipher(options.cipher, key);
+		    var decrypted = decipher.update(data, 'binary', 'utf8');
+		    decrypted += decipher.final('utf8');
+		    callback(null, decrypted);
+		});
 	}
 
 	function hex2uint8array(hex) {
@@ -344,21 +352,28 @@ function Authenticator(core, options) {
 	}
 
 	self.compareStorageHash = function(args, _hash, callback) {
-		var hash = decrypt(_hash);
-		var parts = hash.split(':');
-		if(parts.length != 5 || parts[0] != 'pbkdf2' || parseInt(parts[1]) != self.iterations)
-			return callback({ error : "Wrong encoded hash parameters"})
-
-		var iterations = parseInt(parts[1]);
-		var keylength = parseInt(parts[2]);
-		var salt = base58.decode(parts[4]);
-
-		self.generatePBKDF2(args.password, salt, iterations, keylength, function(err, key) {
+		var hash = decrypt(_hash, function(err, hash) {
 			if(err)
 				return callback(err);
 
-			callback(null, hash === key);
-		})
+			var parts = hash.split(':');
+			if(parts.length != 5 || parts[0] != 'pbkdf2' || parseInt(parts[1]) != self.iterations)
+				return callback({ error : "Wrong encoded hash parameters"})
+
+			var iterations = parseInt(parts[1]);
+			var keylength = parseInt(parts[2]);
+			base58.decode(parts[4], function(err, salt) {
+				if(err)
+					return callback(err);
+
+				self.generatePBKDF2(args.password, salt, iterations, keylength, function(err, key) {
+					if(err)
+						return callback(err);
+
+					callback(null, hash === key);
+				})
+			});
+		});
 	}
 
 	self.validateSignature = function(args, callback) {

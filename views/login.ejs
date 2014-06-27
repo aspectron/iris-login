@@ -89,7 +89,7 @@
         	var user = $("#user").val();
         	var pass = $("#pass").val();
         	$("#message").html('<center><img src="/login/resources/progress.gif"/></center>');
-        	self.post(user, pass, function(err, ack) {
+        	self.post({username: user, password: pass}, function(err, ack) {
         		console.log(arguments);
         		if(err)
         			return $("#message").html(err.error || err || "Server Error");

@@ -453,7 +453,7 @@ function Authenticator(core, options) {
 	};
 
     self.generateTotpSecretKey = function () {
-        return crypto.createHash('sha256').digest('hex').substring(0, 15);
+        return crypto.randomBytes(10).toString('hex');
     };
 
     self.getTotpKeyForGoogleAuthenticator = function (key) {

@@ -582,11 +582,21 @@ function MongoDbAuthenticator(core, options) {
     self.enableTotp = function (user, callback) {
         var q = { }
         q[_username] = self.getUsername(user);
-        options.collection.update(q, {$set: {totp: self.generateTotpSecretKey()}}, {safe:true}, function(err, result) {
-            if (err) return callback(err);
 
-            callback(null, result);
-        })
+        options.collection.findOne(q, function (err, user) {
+            if (err || !user)
+                return callback({error: "Internal Server Error"});
+
+            if (user.totp) {
+                callback(null, 1);
+            }
+
+            options.collection.update(q, {$set: {totp: self.generateTotpSecretKey()}}, {safe:true}, function(err, result) {
+                if (err) return callback(err);
+
+                callback(null, result);
+            })
+        });
     };
 
     self.disableTotp = function (user, callback) {

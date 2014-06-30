@@ -442,9 +442,7 @@ function Authenticator(core, options) {
 	};
 
     self.generateTotpSecretKey = function () {
-
-        // TODO VRuden change on real algorithm
-        return 'ssee232342weerr2rf';
+        return crypto.createHash('sha256').digest('hex').substring(0, 15);
     };
 
     self.getTotpKeyForGoogleAuthenticator = function (key) {
@@ -462,7 +460,8 @@ function Authenticator(core, options) {
     self._getDataForGoogleAuthenticator = function (email, key) {
         return {
             totpKey: self.getTotpKeyForGoogleAuthenticator(key),
-            barcodeUrl: self.getBarcodeUrlForGoogleAuthenticator(email, key)
+            barcodeUrl: self.getBarcodeUrlForGoogleAuthenticator(email, key),
+            barcodeUrlPart: self.getBarcodeUrlPart(email, key)
         };
     }
 

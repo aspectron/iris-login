@@ -469,6 +469,7 @@ function Authenticator(core, options) {
     };
 
     self._getDataForGoogleAuthenticator = function (email, key) {
+        if (!key) return {};
         return {
             totpKey: self.getTotpKeyForGoogleAuthenticator(key),
             barcodeUrl: self.getBarcodeUrlForGoogleAuthenticator(email, key),

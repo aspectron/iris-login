@@ -274,7 +274,7 @@ function Login(core, authenticator, options) {
 
 		app.use(function(req, res, next) {
 			if(!req.session.user)
-				return res.redirect('/loginTotp');
+				return res.redirect('/login');
 			next();
 		})	
 	}

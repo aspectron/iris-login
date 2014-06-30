@@ -588,7 +588,7 @@ function MongoDbAuthenticator(core, options) {
                 return callback({error: "Internal Server Error"});
 
             if (user.totp) {
-                callback(null, 1);
+                return callback(null, 1);
             }
 
             options.collection.update(q, {$set: {totp: self.generateTotpSecretKey()}}, {safe:true}, function(err, result) {

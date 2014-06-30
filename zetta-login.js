@@ -212,7 +212,7 @@ function Login(core, authenticator, options) {
     self.enableTotp = function (req, res, next) {
         res.type('application/json');
 
-        self.authenticator.enableTotp(self.authenticator.getUsername(req.session.user), function (err, result) {
+        self.authenticator.enableTotp(req.session.user, function (err, result) {
             if (!result) {
                 if(err)
                     res.json(400, err);
@@ -225,7 +225,7 @@ function Login(core, authenticator, options) {
     self.disableTotp = function (req, res, next) {
         res.type('application/json');
 
-        self.authenticator.disableTotp(self.authenticator.getUsername(req.session.user), function (err, result) {
+        self.authenticator.disableTotp(req.session.user, function (err, result) {
             if (!result) {
                 if(err)
                     res.json(400, err);
@@ -238,7 +238,7 @@ function Login(core, authenticator, options) {
     self.getTotpSecretKey = function (req, res, next) {
         res.type('application/json');
 
-        self.authenticator.getDataForGoogleAuthenticator(self.authenticator.getUsername(req.session.user), function (err, data) {
+        self.authenticator.getDataForGoogleAuthenticator(req.session.user, function (err, data) {
             if (err)
                 res.json(400, err);
             else
@@ -520,14 +520,15 @@ function BasicAuthenticator(core, options) {
 		})
 	}
 
-    self.enableTotp = function (username, callback) {
+    self.enableTotp = function (user, callback) {
         callback({error: 'Contact the administrator to activate two-factor authentication'});
     };
-    self.disableTotp = function (username, callback) {
+    self.disableTotp = function (user, callback) {
         callback({error: 'Contact the administrator to disable two-factor authentication'});
     };
 
-    self.getDataForGoogleAuthenticator = function (username, callback) {
+    self.getDataForGoogleAuthenticator = function (user, callback) {
+        var username = self.getUsername(user);
         var data = self._getDataForGoogleAuthenticator(username, options.users[username].totp);
 
         callback(null, data);
@@ -577,9 +578,9 @@ function MongoDbAuthenticator(core, options) {
         })
 	});
 
-    self.enableTotp = function (username, callback) {
+    self.enableTotp = function (user, callback) {
         var q = { }
-        q[_username] = args.username;
+        q[_username] = self.getUsername(user);
         collection.update(q, {$set: {totp: self.generateTotpSecretKey()}}, {safe:true}, function(err, result) {
             if (err) return callback(err);
 
@@ -587,9 +588,9 @@ function MongoDbAuthenticator(core, options) {
         })
     };
 
-    self.disableTotp = function (username, callback) {
+    self.disableTotp = function (user, callback) {
         var q = { }
-        q[_username] = args.username;
+        q[_username] = self.getUsername(user);
         collection.update(q, {$unset: {totp: ''}}, {safe:true}, function(err, result) {
             if (err) return callback(err);
 
@@ -597,12 +598,13 @@ function MongoDbAuthenticator(core, options) {
         })
     };
 
-    self.getDataForGoogleAuthenticator = function (username, callback) {
+    self.getDataForGoogleAuthenticator = function (user, callback) {
+        var username = self.getUsername(user);
         var q = { }
         q[_username] = username;
         options.collection.findOne(q, function (err, user) {
             if (err || !user)
-                return callback({ error : 'Wrong user name or password' });
+                return callback(null, null);
 
             var data = self._getDataForGoogleAuthenticator(username, user.totp);
 

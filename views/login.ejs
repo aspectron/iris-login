@@ -1,118 +1,138 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<style>
-		html, body, p
-		{
-			background: white;
-			font-family: "Consolas", "Monaco";
-			font-size: 14px;
-		}
-
-		#dialog {
-			width: 300px;
-			border: 1px solid #ccc;
-			padding: 16px;
-			margin: auto auto;
-			margin-top: 128px;
-		}
-
-		#greeting {
-			margin-bottom: 32px;
-		}
-
-		#user, #pass {
-			width: 216px;
-			font-family: "Consolas", "Monaco";
-		}
-
-		#inputs {
- 			white-space:nowrap; 			
-		}
-
-		#message {
-			clear:both;
-			margin-top: 8px;
-			margin-bottom: 8px;
-			color: #800;
-		}
-
-		#message > img {
-			border: none;
-		}
-
-		#login-button {
-			/*-webkit-touch-callout: none;*/
-			-webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
-		    
-		    clear:both;
-		    float:right;
-		    width: 80px;
-		    font-size: 12px;
-			font-family: "Consolas", "Monaco", "Trebuchet MS", monospace;
-			display: inline-block;
-			text-align: center;
-			padding: 16px;
-			margin: 4px 1px 4px 1px;
-			cursor: default;
-			color: #000;
-			border: 1px solid #ccc;
-
-			background: #ffffff; /* Old browsers */
-			background: -moz-linear-gradient(top, #ffffff 0%, #f6f6f6 47%, #ededed 100%); /* FF3.6+ */
-			background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(47%,#f6f6f6), color-stop(100%,#ededed)); /* Chrome,Safari4+ */
-			background: -webkit-linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%); /* Chrome10+,Safari5.1+ */
-			background: -o-linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%); /* Opera 11.10+ */
-			background: -ms-linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%); /* IE10+ */
-			background: linear-gradient(to bottom, #ffffff 0%,#f6f6f6 47%,#ededed 100%); /* W3C */
-		}
-
-		#login-button:hover {
-			background: #f2f9fe; /* Old browsers */
-			background: -moz-linear-gradient(top, #f2f9fe 0%, #d6f0fd 100%); /* FF3.6+ */
-			background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f2f9fe), color-stop(100%,#d6f0fd)); /* Chrome,Safari4+ */
-			background: -webkit-linear-gradient(top, #f2f9fe 0%,#d6f0fd 100%); /* Chrome10+,Safari5.1+ */
-			background: -o-linear-gradient(top, #f2f9fe 0%,#d6f0fd 100%); /* Opera 11.10+ */
-			background: -ms-linear-gradient(top, #f2f9fe 0%,#d6f0fd 100%); /* IE10+ */
-			background: linear-gradient(to bottom, #f2f9fe 0%,#d6f0fd 100%); /* W3C */
-		}
-	</style>
-    <script>
-    window.loginClient = new <%- Client %>;
-    window.loginClient.ready(function(self) {
-		$("#user").focus();
-		$("#user").keypress(function(event) { if(event.which == 13) login(); })
-		$("#pass").keypress(function(event) { if(event.which == 13) login(); })
-		$("#login-button").click(function(){ login(); })
-
-        function login() {
-        	var user = $("#user").val();
-        	var pass = $("#pass").val();
-        	$("#message").html('<center><img src="/login/resources/progress.gif"/></center>');
-        	self.post({username: user, password: pass}, function(err, ack) {
-        		console.log(arguments);
-        		if(err)
-        			return $("#message").html(err.error || err || "Server Error");
-        		if(ack)
-        			window.location.replace('/');
-        	})
+    <style>
+        html, body, p
+        {
+            background: white;
+            font-family: "Consolas", "Monaco";
+            font-size: 14px;
         }
-    })
+
+        #dialog {
+            width: 300px;
+            border: 1px solid #ccc;
+            padding: 16px;
+            margin: auto auto;
+            margin-top: 128px;
+        }
+
+        #greeting {
+            margin-bottom: 32px;
+        }
+
+        #user, #pass {
+            width: 216px;
+            font-family: "Consolas", "Monaco";
+        }
+
+        #inputs {
+            white-space:nowrap;
+        }
+
+        #message {
+            clear:both;
+            margin-top: 8px;
+            margin-bottom: 8px;
+            color: #800;
+        }
+
+        #message > img {
+            border: none;
+        }
+
+        #login-button {
+            /*-webkit-touch-callout: none;*/
+            -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none;
+
+            clear:both;
+            float:right;
+            width: 80px;
+            font-size: 12px;
+            font-family: "Consolas", "Monaco", "Trebuchet MS", monospace;
+            display: inline-block;
+            text-align: center;
+            padding: 16px;
+            margin: 4px 1px 4px 1px;
+            cursor: default;
+            color: #000;
+            border: 1px solid #ccc;
+
+            background: #ffffff; /* Old browsers */
+            background: -moz-linear-gradient(top, #ffffff 0%, #f6f6f6 47%, #ededed 100%); /* FF3.6+ */
+            background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(47%,#f6f6f6), color-stop(100%,#ededed)); /* Chrome,Safari4+ */
+            background: -webkit-linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%); /* Chrome10+,Safari5.1+ */
+            background: -o-linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%); /* Opera 11.10+ */
+            background: -ms-linear-gradient(top, #ffffff 0%,#f6f6f6 47%,#ededed 100%); /* IE10+ */
+            background: linear-gradient(to bottom, #ffffff 0%,#f6f6f6 47%,#ededed 100%); /* W3C */
+        }
+
+        #login-button:hover {
+            background: #f2f9fe; /* Old browsers */
+            background: -moz-linear-gradient(top, #f2f9fe 0%, #d6f0fd 100%); /* FF3.6+ */
+            background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f2f9fe), color-stop(100%,#d6f0fd)); /* Chrome,Safari4+ */
+            background: -webkit-linear-gradient(top, #f2f9fe 0%,#d6f0fd 100%); /* Chrome10+,Safari5.1+ */
+            background: -o-linear-gradient(top, #f2f9fe 0%,#d6f0fd 100%); /* Opera 11.10+ */
+            background: -ms-linear-gradient(top, #f2f9fe 0%,#d6f0fd 100%); /* IE10+ */
+            background: linear-gradient(to bottom, #f2f9fe 0%,#d6f0fd 100%); /* W3C */
+        }
+
+        #one-time-password-container .one-time-password-box {
+            display: none;
+        }
+    </style>
+    <script>
+        window.loginClient = new <%- Client %>;
+        window.loginClient.ready(function(self) {
+            $("#user").focus();
+            $("#user").keypress(function(event) { if(event.which == 13) login(); })
+            $("#pass").keypress(function(event) { if(event.which == 13) login(); })
+            $("#login-button").click(function(){ login(); })
+
+            function login() {
+                var user = $("#user").val();
+                var pass = $("#pass").val();
+                var totp = $("#one-time-pass").val();
+                $("#message").html('<center><img src="/login/resources/progress.gif"/></center>');
+                self.post({username: user, password: pass, totpToken: totp}, function(err, ack) {
+                    console.log(arguments);
+                    if(err)
+                        return $("#message").html(err.error || err || "Server Error");
+                    if(ack)
+                        window.location.replace('/');
+                })
+            }
+
+            var $oneTimePasswordContainer = $('#one-time-password-container');
+            var $showBoxLink = $oneTimePasswordContainer.find('.show-box');
+            $showBoxLink.on('click', function(e) {
+                $oneTimePasswordContainer.find('.one-time-password-box').show();
+                $showBoxLink.hide();
+                return false;
+            });
+        })
     </script>
 </head>
 <body>
-	<div id='content'>
-		<div id='dialog'>
-			<div id='greeting'>PLEASE LOGIN</div>
-			<div id='inputs'>
-				USERNAME: <input id='user' name='user' type='text' value=""/><br/>
-				PASSWORD: <input id='pass' name='pass' type='password' value="" /><br/>
-			</div>
-			<div id='message'>&nbsp;</div>
-			<div id='login-button'>LOGIN</div>
-			<br style='clear:both;'/>
-		</div>
-	</div>
+<div id='content'>
+    <div id='dialog'>
+        <div id='greeting'>PLEASE LOGIN</div>
+        <div id='inputs'>
+            USERNAME: <input id='user' name='user' type='text' value=""/><br/>
+            PASSWORD: <input id='pass' name='pass' type='password' value="" /><br/>
+        </div>
+        <div id="one-time-password-container">
+            <a href="#" class="show-box">Use one time password</a>
+            <div class="one-time-password-box">
+                ONE TIME PASSWORD: <input id='one-time-pass' name='oneTimePass' type='text' value="" /><br/>
+            </div>
+
+        </div>
+        <div id='message'>&nbsp;</div>
+        <div id='login-button'>LOGIN</div>
+        <br style='clear:both;'/>
+    </div>
+</div>
 </body>
 </html>
 

@@ -94,10 +94,6 @@ function Login(core, authenticator, options) {
 		self._getLogin(options.view || path.join(__dirname, 'views/login.ejs'), req, res);
 	}
 
-    self.getLoginTotp = function (req, res, next) {
-        self._getLogin(options.view || path.join(__dirname, 'views/login-totp.ejs'), req, res);
-    };
-
 	self.postChallenge = function(req, res, next) {
 		res.type('application/json');
 		var ts = Date.now();
@@ -270,7 +266,6 @@ function Login(core, authenticator, options) {
 		app.get(_path+'/login', self.getLogin);
 		app.post(_path+'/challenge', self.postChallenge);
 		app.post(_path+'/login', self.postLogin);
-        app.get(_path+'/loginTotp', self.getLoginTotp);
         app.get(_path+'/enableTotp', self.enableTotp);
         app.get(_path+'/disableTotp', self.disableTotp);
         app.get(_path+'/getTotpSecretKey', self.getTotpSecretKey);

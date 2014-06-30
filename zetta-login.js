@@ -581,7 +581,7 @@ function MongoDbAuthenticator(core, options) {
     self.enableTotp = function (user, callback) {
         var q = { }
         q[_username] = self.getUsername(user);
-        collection.update(q, {$set: {totp: self.generateTotpSecretKey()}}, {safe:true}, function(err, result) {
+        options.collection.update(q, {$set: {totp: self.generateTotpSecretKey()}}, {safe:true}, function(err, result) {
             if (err) return callback(err);
 
             callback(null, result);
@@ -591,7 +591,7 @@ function MongoDbAuthenticator(core, options) {
     self.disableTotp = function (user, callback) {
         var q = { }
         q[_username] = self.getUsername(user);
-        collection.update(q, {$unset: {totp: ''}}, {safe:true}, function(err, result) {
+        options.collection.update(q, {$unset: {totp: ''}}, {safe:true}, function(err, result) {
             if (err) return callback(err);
 
             callback(null, result);

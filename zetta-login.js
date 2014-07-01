@@ -551,8 +551,10 @@ var Client = function() {
 	}
 
 	self.encrypt = function(username, password, salt, callback) {
-		if(!username || !password)
-			return callback({ error : "Need username and password."});
+		if(!username)
+			return callback({ error : "Please supply username."});
+		if(!password)
+			return callback({ error : "Please supply password."});
 		var hash = null;
 		if(self.args.scrypt) {
 			var ts = Date.now();

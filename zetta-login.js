@@ -32,6 +32,8 @@ var scrypt = require('./scrypt');
 var base58 = require('zetta-base58');
 var path = require('path');
 var ServeStatic = require('serve-static');
+var notp = require('notp');
+var base32 = require('thirty-two');
 
 // http://stackoverflow.com/questions/14382725/how-to-get-the-correct-ip-address-of-a-client-into-a-node-socket-io-app-hosted-o
 function getClientIp(req) {
@@ -77,15 +79,19 @@ function Login(core, authenticator, options) {
 		return self.authenticator.authenticate(args, callback);
 	}
 
+    self._getLogin = function (viewPath, req, res) {
+        res.render(viewPath,
+            { Client : self.getClientJavaScript() }, function(err, html) {
+                if(err) {
+                    console.log(err);
+                    return res.end("Server Error");
+                }
+                res.end(strip(html));
+            });
+    };
+
 	self.getLogin = function(req, res, next) {
-		res.render(options.view || path.join(__dirname, 'views/login.ejs'), 
-			{ Client : self.getClientJavaScript() }, function(err, html) {
-				if(err) {
-					console.log(err);
-					return res.end("Server Error");
-				}
-		        res.end(strip(html));
-			});
+		self._getLogin(options.view || path.join(__dirname, 'views/login.ejs'), req, res);
 	}
 
 	self.postChallenge = function(req, res, next) {
@@ -109,7 +115,7 @@ function Login(core, authenticator, options) {
 		});
 	}
 
-	self.logout = function(req, res, next) {
+    	self.logout = function(req, res, next) {
 		var user = req.session.user;
 		if(!user)
 			return res.send(401);
@@ -146,7 +152,8 @@ function Login(core, authenticator, options) {
         	username : req.body.username, 
         	password : req.body.password, 
         	auth : req.session.auth,
-        	sig : req.body.sig
+        	sig : req.body.sig,
+        	totpToken : req.body.totpToken
         }, function(err, user) {
         	delete req.session.auth;
 
@@ -198,6 +205,44 @@ function Login(core, authenticator, options) {
 		callback(null, true);
 	}
 
+    self.enableTotp = function (req, res, next) {
+        res.type('application/json');
+
+        self.authenticator.enableTotp(req.session.user, function (err, result) {
+            if (!result) {
+                if(err)
+                    res.json(400, err);
+            } else {
+                res.json({success : true});
+            }
+        });
+    };
+
+    self.disableTotp = function (req, res, next) {
+        res.type('application/json');
+
+        self.authenticator.disableTotp(req.session.user, function (err, result) {
+            if (!result) {
+                if(err)
+                    res.json(400, err);
+            } else {
+                res.json({success : true});
+            }
+        });
+    };
+
+    self.getTotpSecretKey = function (req, res, next) {
+        res.type('application/json');
+
+        self.authenticator.getDataForGoogleAuthenticator(req.session.user, function (err, data) {
+            if (err)
+                res.json(400, err);
+            else
+                res.json(data);
+
+        });
+    };
+
 	function strip(str) {
 		return str;
 	    //return str.replace(/\s{2,}/g, ' ');//.replace(/ENTER/g,'\n');
@@ -221,6 +266,9 @@ function Login(core, authenticator, options) {
 		app.get(_path+'/login', self.getLogin);
 		app.post(_path+'/challenge', self.postChallenge);
 		app.post(_path+'/login', self.postLogin);
+        app.get(_path+'/enableTotp', self.enableTotp);
+        app.get(_path+'/disableTotp', self.disableTotp);
+        app.get(_path+'/getTotpSecretKey', self.getTotpSecretKey);
 
 		app.use('/login/resources', ServeStatic(path.join(__dirname, 'http')));	
 
@@ -397,7 +445,36 @@ function Authenticator(core, options) {
 				callback(null, true);
 			})
 		})
-	}
+	};
+
+    self.generateTotpSecretKey = function () {
+        return crypto.randomBytes(10).toString('hex');
+    };
+
+    self.getTotpKeyForGoogleAuthenticator = function (key) {
+        return base32.encode(key);
+    };
+
+    self.getBarcodeUrlPart = function (email, key) {
+        return encodeURIComponent('otpauth://totp/' + email + '?secret=' + self.getTotpKeyForGoogleAuthenticator(key));
+    };
+
+    self.getBarcodeUrlForGoogleAuthenticator = function (email, key) {
+        return 'https://www.google.com/chart?chs=200x200&chld=M|0&cht=qr&chl=' + self.getBarcodeUrlPart(email, key)
+    };
+
+    self._getDataForGoogleAuthenticator = function (email, key) {
+        if (!key) return {};
+        return {
+            totpKey: self.getTotpKeyForGoogleAuthenticator(key),
+            barcodeUrl: self.getBarcodeUrlForGoogleAuthenticator(email, key),
+            barcodeUrlPart: self.getBarcodeUrlPart(email, key)
+        };
+    }
+
+    self.verifyTotpToken = function (token, key) {
+        return notp.totp.verify(token, key, {});
+    };
 }
 util.inherits(Authenticator, events.EventEmitter);
 
@@ -408,7 +485,19 @@ function BasicAuthenticator(core, options) {
 	if(!options.users)
 		throw new Error("BasicAuthenticator requires 'users' in options");
 
+    self.getUsername = function (user) {
+        return user.username;
+    };
+
 	self.authenticate = function(args, callback) {
+        var username = args.username.toLowerCase();
+
+        if (options.users[username] && options.users[username].totp) {
+            if (!self.verifyTotpToken(args.totpToken, options.users[username].totp)) {
+                return callback({ error : "Wrong one time password"});
+            }
+        }
+
 		var username = args.username.toLowerCase();
 		var password = options.users[username];
 		if(!password)
@@ -426,6 +515,20 @@ function BasicAuthenticator(core, options) {
 			})	
 		})
 	}
+
+    self.enableTotp = function (user, callback) {
+        callback({error: 'Contact the administrator to activate two-factor authentication'});
+    };
+    self.disableTotp = function (user, callback) {
+        callback({error: 'Contact the administrator to disable two-factor authentication'});
+    };
+
+    self.getDataForGoogleAuthenticator = function (user, callback) {
+        var username = self.getUsername(user);
+        var data = self._getDataForGoogleAuthenticator(username, options.users[username].totp);
+
+        callback(null, data);
+    };
 }
 util.inherits(BasicAuthenticator, Authenticator);
 
@@ -438,13 +541,23 @@ function MongoDbAuthenticator(core, options) {
 	var _username = options.username || 'email';
 	var _password = options.password || 'password';
 
+    self.getUsername = function (user) {
+        return user[_username];
+    };
+
 	self.authenticate = function(args, callback) {
 		var q = { }
 		q[_username] = args.username;
         options.collection.findOne(q, function (err, user) {
             if (err || !user)
                 return callback({ error : 'Wrong user name or password' });
-            
+
+            if (user.totp) {
+                if (!self.verifyTotpToken(args.totpToken, user.totp)) {
+                    return callback({ error : "Wrong one time password"});
+                }
+            }
+
 			self.compare(args, user[_password], function(err, match) {
 				if(err || !match)
 					return callback(err, match);
@@ -459,7 +572,51 @@ function MongoDbAuthenticator(core, options) {
 		q[_username] = args.username;
         collection.update(q, { $set : { last_login : ts }}, {safe:true}, function(err) {
         })
-	})
+	});
+
+    self.enableTotp = function (user, callback) {
+        var q = { }
+        q[_username] = self.getUsername(user);
+
+        options.collection.findOne(q, function (err, user) {
+            if (err || !user)
+                return callback({error: "Internal Server Error"});
+
+            if (user.totp) {
+                return callback(null, 1);
+            }
+
+            options.collection.update(q, {$set: {totp: self.generateTotpSecretKey()}}, {safe:true}, function(err, result) {
+                if (err) return callback(err);
+
+                callback(null, result);
+            })
+        });
+    };
+
+    self.disableTotp = function (user, callback) {
+        var q = { }
+        q[_username] = self.getUsername(user);
+        options.collection.update(q, {$unset: {totp: ''}}, {safe:true}, function(err, result) {
+            if (err) return callback(err);
+
+            callback(null, result);
+        })
+    };
+
+    self.getDataForGoogleAuthenticator = function (user, callback) {
+        var username = self.getUsername(user);
+        var q = { }
+        q[_username] = username;
+        options.collection.findOne(q, function (err, user) {
+            if (err || !user)
+                return callback(null, null);
+
+            var data = self._getDataForGoogleAuthenticator(username, user.totp);
+
+            callback(null, data);
+        });
+    };
 }
 util.inherits(MongoDbAuthenticator, Authenticator);
 
@@ -595,16 +752,21 @@ var Client = function() {
 	    })
 	}
 
-	self.post = function(username, password, callback) {
-		if(!username || !password)
+	self.post = function(data, callback) {
+		if(!data || !data.username || !data.password)
 			return callback({ error : "Please enter user name and password"});
+
+        var totpToken = data.totpToken;
 		post(self.path+'/challenge', {}, function(err, challenge) {
 			if(err)
 				return callback(err);
 
-			self.encrypt(username, password, challenge.auth, function(err, data) {
+			self.encrypt(data.username, data.password, challenge.auth, function(err, data) {
 				if(err)
 					return callback(err);
+
+                data.totpToken = totpToken;
+
 				post(self.path+'/login',data, function(err, resp) {
 					callback(err, resp);
 				})

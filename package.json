@@ -9,7 +9,9 @@
   "dependencies": {
     "underscore" : "*",
     "serve-static" : "*",
-    "zetta-base58" : "*"
+    "zetta-base58" : "*",
+    "notp" : "*",
+    "thirty-two" : "*"
   },
   "keywords": [
     "utilities",

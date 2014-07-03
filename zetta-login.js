@@ -441,37 +441,26 @@ function BasicAuthenticator(core, options) {
 		throw new Error("BasicAuthenticator requires 'users' in options");
 
 	self.authenticate = function(args, callback) {
-        var username = args.username.toLowerCase();
-
-//        if (options.users[username] && options.users[username].totp) {
-//            if (!self.verifyTotpToken(args.totpToken, options.users[username].totp)) {
-//                return callback({ error : "Wrong one time password"});
-//            }
-//        }
-        if (options.users[username] && options.users[username].totp) {
-            if (!args.totpToken) {
-                var data = self._getDataForGoogleAuthenticator(args.username, options.users[username].totp);
-
-                return callback(null, data);
-            }
-
-            if (!self.verifyTotpToken(args.totpToken, options.users[username].totp)) {
-                return callback({error : "Wrong one time password"});
-            }
-        }
-
 		var username = args.username.toLowerCase();
         var password = options.users[username] ? options.users[username].password : null;
 		if(!password)
 			return callback(null, false);
 
-
-
 		self.compare(args, password, function(err, match) {
-			if(err)
-				return callback(err);
-		
-			callback(err, { 
+            if(err || !match)
+                return callback(err, match);
+
+            if (options.users[username] && options.users[username].totp && options.users[username].totp.enabled) {
+                if (!args.totpToken) {
+                    return callback({request: 'TOTP'});
+                }
+
+                if (!self.verifyTotpToken(args.totpToken, options.users[username].totp.key)) {
+                    return callback({error : "Wrong one time password"});
+                }
+            }
+
+            callback(err, {
 				username : username,
 				success : true
 			})	
@@ -500,7 +489,7 @@ function MongoDbAuthenticator(core, options) {
 				if(err || !match)
 					return callback(err, match);
 
-                if (user.totp.enabled) {
+                if (user.totp && user.totp.enabled) {
                     if (!args.totpToken) {
                         return callback({request: 'TOTP'});
                     }

@@ -492,11 +492,11 @@ function BasicAuthenticator(core, options) {
 	self.authenticate = function(args, callback) {
         var username = args.username.toLowerCase();
 
-        if (options.users[username] && options.users[username].totp) {
-            if (!self.verifyTotpToken(args.totpToken, options.users[username].totp)) {
-                return callback({ error : "Wrong one time password"});
-            }
-        }
+//        if (options.users[username] && options.users[username].totp) {
+//            if (!self.verifyTotpToken(args.totpToken, options.users[username].totp)) {
+//                return callback({ error : "Wrong one time password"});
+//            }
+//        }
 
 		var username = args.username.toLowerCase();
 		var password = options.users[username];
@@ -552,11 +552,11 @@ function MongoDbAuthenticator(core, options) {
             if (err || !user)
                 return callback({ error : 'Wrong user name or password' });
 
-            if (user.totp) {
-                if (!self.verifyTotpToken(args.totpToken, user.totp)) {
-                    return callback({ error : "Wrong one time password"});
-                }
-            }
+//            if (user.totp) {
+//                if (!self.verifyTotpToken(args.totpToken, user.totp)) {
+//                    return callback({ error : "Wrong one time password"});
+//                }
+//            }
 
 			self.compare(args, user[_password], function(err, match) {
 				if(err || !match)

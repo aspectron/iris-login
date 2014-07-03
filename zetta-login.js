@@ -499,7 +499,7 @@ function BasicAuthenticator(core, options) {
 //        }
 
 		var username = args.username.toLowerCase();
-		var password = options.users[username];
+        var password = options.users[username] ? options.users[username].password : null;
 		if(!password)
 			return callback(null, false);
 

@@ -455,8 +455,12 @@ function Authenticator(core, options) {
         return base32.encode(key);
     };
 
-    self.getBarcodeUrlPart = function (email, key) {
+    /*self.getBarcodeUrlPart = function (email, key) {
         return encodeURIComponent('otpauth://totp/' + email + '?secret=' + self.getTotpKeyForGoogleAuthenticator(key));
+    };
+    */
+    self.getBarcodeUrlPart = function (email, key) {
+        return 'otpauth://totp/' + email + '?secret=' + self.getTotpKeyForGoogleAuthenticator(key);
     };
 
     self.getBarcodeUrlForGoogleAuthenticator = function (email, key) {

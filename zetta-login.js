@@ -496,12 +496,6 @@ function MongoDbAuthenticator(core, options) {
             if (err || !user)
                 return callback({ error : 'Wrong user name or password' });
 
-            if (user.totp) {
-                if (!self.verifyTotpToken(args.totpToken, user.totp)) {
-                    return callback({ error : "Wrong one time password"});
-                }
-            }
-
 			self.compare(args, user[_password], function(err, match) {
 				if(err || !match)
 					return callback(err, match);

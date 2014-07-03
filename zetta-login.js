@@ -443,6 +443,11 @@ function BasicAuthenticator(core, options) {
 	self.authenticate = function(args, callback) {
         var username = args.username.toLowerCase();
 
+//        if (options.users[username] && options.users[username].totp) {
+//            if (!self.verifyTotpToken(args.totpToken, options.users[username].totp)) {
+//                return callback({ error : "Wrong one time password"});
+//            }
+//        }
         if (options.users[username] && options.users[username].totp) {
             if (!args.totpToken) {
                 var data = self._getDataForGoogleAuthenticator(args.username, options.users[username].totp);
@@ -456,7 +461,7 @@ function BasicAuthenticator(core, options) {
         }
 
 		var username = args.username.toLowerCase();
-		var password = options.users[username];
+        var password = options.users[username] ? options.users[username].password : null;
 		if(!password)
 			return callback(null, false);
 
@@ -490,6 +495,12 @@ function MongoDbAuthenticator(core, options) {
         options.collection.findOne(q, function (err, user) {
             if (err || !user)
                 return callback({ error : 'Wrong user name or password' });
+
+            if (user.totp) {
+                if (!self.verifyTotpToken(args.totpToken, user.totp)) {
+                    return callback({ error : "Wrong one time password"});
+                }
+            }
 
 			self.compare(args, user[_password], function(err, match) {
 				if(err || !match)

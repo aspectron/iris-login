@@ -481,19 +481,18 @@ function MongoDbAuthenticator(core, options) {
 	if(!options.collection)
 		throw new Error("MongoDbAuthenticator requires 'collection' arguments.");
 
+    self.users = {};
+    self.cacheTime = 5; // 5 minutes
+
 	var _username = options.username || 'email';
 	var _password = options.password || 'password';
 
 	self.authenticate = function(args, callback) {
-		var q = { }
-		q[_username] = args.username;
-        options.collection.findOne(q, function (err, user) {
-            if (err || !user)
-                return callback({ error : 'Wrong user name or password' });
-
-			self.compare(args, user[_password], function(err, match) {
-				if(err || !match)
-					return callback(err, match);
+        if (self.users[args.username]) {
+            var user = self.users[args.username];
+            self.compare(args, user[_password], function(err, match) {
+                if(err || !match)
+                    return callback(err, match);
 
                 if (user.totp && user.totp.enabled) {
                     if (!args.totpToken) {
@@ -502,13 +501,53 @@ function MongoDbAuthenticator(core, options) {
 
                     if (!self.verifyTotpToken(args.totpToken, user.totp.key)) {
                         return callback({error : "Wrong one time password"});
+                    } else {
+                        delete self.users[args.username];
                     }
                 }
-			
-				callback(err, user)	
-			})
-        });
+
+                callback(err, user)
+            });
+        } else {
+            var q = { }
+            q[_username] = args.username;
+            options.collection.findOne(q, function (err, user) {
+                if (err || !user)
+                    return callback({ error : 'Wrong user name or password' });
+
+                self.compare(args, user[_password], function(err, match) {
+                    if(err || !match)
+                        return callback(err, match);
+
+                    if (user.totp && user.totp.enabled) {
+                        self.users[args.username] = user;
+                        self.users[args.username].created = Date.now();
+
+                        if (!args.totpToken) {
+                            return callback({request: 'TOTP'});
+                        }
+
+                        if (!self.verifyTotpToken(args.totpToken, user.totp.key)) {
+                            return callback({error : "Wrong one time password"});
+                        } else {
+                            delete self.users[args.username];
+                        }
+                    }
+
+                    callback(err, user)
+                })
+            });
+        }
 	}
+
+    // clean old user from memory
+    setInterval(function() {
+        _.each(self.users, function(user, i) {
+            if (Date.now() - user.created > self.cacheTime * 1000 * 60) {
+                delete self.users[i];
+            }
+        });
+    }, 1000 * 60 * 5);
 
 	self.on('user-login', function(user) {
 		var q = { }

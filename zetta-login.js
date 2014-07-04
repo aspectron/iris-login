@@ -455,8 +455,12 @@ function Authenticator(core, options) {
         return base32.encode(key);
     };
 
-    self.getBarcodeUrlPart = function (email, key) {
+    /*self.getBarcodeUrlPart = function (email, key) {
         return encodeURIComponent('otpauth://totp/' + email + '?secret=' + self.getTotpKeyForGoogleAuthenticator(key));
+    };
+    */
+    self.getBarcodeUrlPart = function (email, key) {
+        return 'otpauth://totp/' + email + '?secret=' + self.getTotpKeyForGoogleAuthenticator(key);
     };
 
     self.getBarcodeUrlForGoogleAuthenticator = function (email, key) {
@@ -499,7 +503,7 @@ function BasicAuthenticator(core, options) {
 //        }
 
 		var username = args.username.toLowerCase();
-		var password = options.users[username];
+        var password = options.users[username] ? options.users[username].password : null;
 		if(!password)
 			return callback(null, false);
 

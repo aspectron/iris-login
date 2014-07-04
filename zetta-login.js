@@ -406,6 +406,12 @@ function Authenticator(core, options) {
 		})
 	};
 
+    self.generateTotpSecretKey = function(length) {
+        length = length || 10;
+
+        return crypto.randomBytes(length).toString('hex');
+    };
+
     self.getTotpKeyForGoogleAuthenticator = function (key) {
         return base32.encode(key);
     };
@@ -418,7 +424,7 @@ function Authenticator(core, options) {
         return 'https://www.google.com/chart?chs=200x200&chld=M|0&cht=qr&chl=' + self.getBarcodeUrlPart(email, key)
     };
 
-    self._getDataForGoogleAuthenticator = function (email, key) {
+    self.getDataForGoogleAuthenticator = function (email, key) {
         if (!key) return {};
         return {
             totpKey: self.getTotpKeyForGoogleAuthenticator(key),

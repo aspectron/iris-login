@@ -416,8 +416,12 @@ function Authenticator(core, options) {
         return base32.encode(key);
     };
 
-    self.getBarcodeUrlPart = function (email, key) {
+    /*self.getBarcodeUrlPart = function (email, key) {
         return encodeURIComponent('otpauth://totp/' + email + '?secret=' + self.getTotpKeyForGoogleAuthenticator(key));
+    };
+    */
+    self.getBarcodeUrlPart = function (email, key) {
+        return 'otpauth://totp/' + email + '?secret=' + self.getTotpKeyForGoogleAuthenticator(key);
     };
 
     self.getBarcodeUrlForGoogleAuthenticator = function (email, key) {
@@ -646,8 +650,10 @@ var Client = function() {
 	}
 
 	self.encrypt = function(username, password, salt, callback) {
-		if(!username || !password)
-			return callback({ error : "Need username and password."});
+		if(!username)
+			return callback({ error : "Please supply username."});
+		if(!password)
+			return callback({ error : "Please supply password."});
 		var hash = null;
 		if(self.args.scrypt) {
 			var ts = Date.now();

@@ -16,6 +16,8 @@
             margin: auto auto;
             margin-top: 128px;
         }
+        #totp-dialog { display : none; }
+        #totp { width: 216px; }
 
         #greeting {
             margin-bottom: 32px;
@@ -26,7 +28,7 @@
             font-family: "Consolas", "Monaco";
         }
 
-        #inputs {
+        #lp-dialog {
             white-space:nowrap;
         }
 
@@ -76,10 +78,6 @@
             background: -ms-linear-gradient(top, #f2f9fe 0%,#d6f0fd 100%); /* IE10+ */
             background: linear-gradient(to bottom, #f2f9fe 0%,#d6f0fd 100%); /* W3C */
         }
-
-        #one-time-password-container .one-time-password-box {
-            display: none;
-        }
     </style>
     <script>
         window.loginClient = new <%- Client %>;
@@ -92,24 +90,25 @@
             function login() {
                 var user = $("#user").val();
                 var pass = $("#pass").val();
-                var totp = $("#one-time-pass").val();
+                var totp = $("#totp").val();
                 $("#message").html('<center><img src="/login/resources/progress.gif"/></center>');
                 self.post({username: user, password: pass, totpToken: totp}, function(err, ack) {
                     console.log(arguments);
-                    if(err)
+                    if(err) {
+                        if (err.request == 'TOTP') {
+                            $('#totp-dialog').show();
+                            $("#lp-dialog").hide();
+                            $("#message").empty();
+                            return false;
+                        }
+
                         return $("#message").html(err.error || err || "Server Error");
+                    }
+
                     if(ack)
                         window.location.replace('/');
                 })
             }
-
-            var $oneTimePasswordContainer = $('#one-time-password-container');
-            var $showBoxLink = $oneTimePasswordContainer.find('.show-box');
-            $showBoxLink.on('click', function(e) {
-                $oneTimePasswordContainer.find('.one-time-password-box').show();
-                $showBoxLink.hide();
-                return false;
-            });
         })
     </script>
 </head>
@@ -117,19 +116,16 @@
 <div id='content'>
     <div id='dialog'>
         <div id='greeting'>PLEASE LOGIN</div>
-        <div id='inputs'>
-            USERNAME: <input id='user' name='user' type='text' value=""/><br/>
-            PASSWORD: <input id='pass' name='pass' type='password' value="" /><br/>
+        <div id='lp-dialog'>
+            USERNAME: <input id='user' name='user' type='text' value="" placeholder="E-Mail" /><br/>
+            PASSWORD: <input id='pass' name='pass' type='password' value="" placeholder="Password" /><br/>
         </div>
-        <div id="one-time-password-container">
-            <a href="#" class="show-box">Use one time password</a>
-            <div class="one-time-password-box">
-                ONE TIME PASSWORD: <input id='one-time-pass' name='oneTimePass' type='text' value="" /><br/>
-            </div>
-
+        <div id='totp-dialog'>
+            <div class='caption'>Please Enter 2 Factor Authentication:&nbsp;</div>
+            <input id='totp' name='oneTimePass' type='text' value="" placeholder="One time password"/>
         </div>
         <div id='message'>&nbsp;</div>
-        <div id='login-button'>LOGIN</div>
+        <div id='login-button' class='button'>LOGIN</div>
         <br style='clear:both;'/>
     </div>
 </div>

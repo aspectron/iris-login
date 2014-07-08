@@ -386,7 +386,7 @@ function Authenticator(core, options) {
 	self.validateSignature = function(args, callback) {
 		var sig = crypto.createHmac('sha256', new Buffer(args.auth, 'hex')).update(new Buffer(args.password, 'hex')).digest('hex');
 		if(args.sig != sig)
-			return false;
+			return callback(null, false);
 
 		callback(null, args.sig == sig);
 	}

@@ -552,8 +552,9 @@ function MongoDbAuthenticator(core, options) {
 
 	self.on('user-login', function(user) {
 		var q = { }
-		q[_username] = args.username;
-        collection.update(q, { $set : { last_login : ts }}, {safe:true}, function(err) {
+		q[_username] = user[_username];
+        var ts = Date.now();
+        options.collection.update(q, { $set : { last_login : ts }}, {safe:true}, function(err) {
         })
 	});
 }

@@ -153,7 +153,8 @@ function Login(core, authenticator, options) {
         	password : req.body.password, 
         	auth : req.session.auth,
         	sig : req.body.sig,
-        	totpToken : req.body.totpToken
+        	totpToken : req.body.totpToken,
+            ip: ip
         }, function(err, user) {
         	delete req.session.auth;
 
@@ -488,12 +489,26 @@ function MongoDbAuthenticator(core, options) {
 	var _username = options.username || 'email';
 	var _password = options.password || 'password';
 
+    core.db._database.collection('ips', function(err, collection){
+        if (err)
+            return console.log('Ips collection not init:', err);
+        self.IpCollection = collection;
+    });
+
+    core.db._database.collection('ipts', function(err, collection){
+        if (err)
+            return console.log('IpTs collection not init:', err);
+        self.IpTsCollection = collection;
+    });
+
 	self.authenticate = function(args, callback) {
         if (self.users[args.username]) {
             var user = self.users[args.username];
             self.compare(args, user[_password], function(err, match) {
-                if(err || !match)
+                if(err || !match) {
+                    incrementAttempt(args.ip, false);
                     return callback(err, match);
+                }
 
                 if (user.totp && user.totp.enabled) {
                     if (!args.totpToken) {
@@ -501,11 +516,14 @@ function MongoDbAuthenticator(core, options) {
                     }
 
                     if (!self.verifyTotpToken(args.totpToken, user.totp.key)) {
+                        incrementAttempt(args.ip, false);
                         return callback({error : "Wrong one time password"});
                     } else {
                         delete self.users[args.username];
                     }
                 }
+
+                incrementAttempt(args.ip, true);
 
                 callback(err, user)
             });
@@ -517,8 +535,10 @@ function MongoDbAuthenticator(core, options) {
                     return callback({ error : 'Wrong user name or password' });
 
                 self.compare(args, user[_password], function(err, match) {
-                    if(err || !match)
+                    if(err || !match){
+                        incrementAttempt(args.ip, false);
                         return callback(err, match);
+                    }
 
                     if (user.totp && user.totp.enabled) {
                         self.users[args.username] = user;
@@ -529,11 +549,14 @@ function MongoDbAuthenticator(core, options) {
                         }
 
                         if (!self.verifyTotpToken(args.totpToken, user.totp.key)) {
+                            incrementAttempt(args.ip, false);
                             return callback({error : "Wrong one time password"});
                         } else {
                             delete self.users[args.username];
                         }
                     }
+
+                    incrementAttempt(args.ip, true);
 
                     callback(err, user)
                 })
@@ -550,10 +573,44 @@ function MongoDbAuthenticator(core, options) {
         });
     }, 1000 * 60 * 5);
 
+    function incrementAttempt (ip, success) {
+        self.IpCollection.findOne({ip: ip}, function(err, data) {
+            if (err)
+                return console.log('Login Attempt Incrementing Error', err);
+
+            if (!data) {
+                self.IpCollection.insert({
+                    ip: ip,
+                    success: 0,
+                    failure: 0,
+                    blocked: false
+                }, {w: 1}, function(err) {
+                    if (err)
+                        return console.log('Login Attempt Incrementing Error', err);
+                });
+            }
+
+            var exp = success ? {success : 1} : {failure: 1};
+            self.IpCollection && self.IpCollection.update({ip: ip}, {$inc: exp}, function (err, result) {
+                if (err)
+                    return console.log('Login Attempt Incrementing Error', err);
+            });
+            self.IpTsCollection && self.IpTsCollection.insert({
+                ip: ip,
+                ts: new Date().getTime(),
+                r: success ? 's' : 'f' // result
+            }, function(err, data) {
+                if (err)
+                    return console.log('Login Attempt Incrementing Error', err);
+            });
+        });
+    }
+
 	self.on('user-login', function(user) {
 		var q = { }
-		q[_username] = args.username;
-        collection.update(q, { $set : { last_login : ts }}, {safe:true}, function(err) {
+		q[_username] = user.username;
+        var ts = Date.now();
+        options.collection.update(q, { $set : { last_login : ts }}, {safe:true}, function(err) {
         })
 	});
 }

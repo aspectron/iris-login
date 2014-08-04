@@ -186,8 +186,8 @@ function Login(core, authenticator, options) {
 			                delete self.loginTracking[ip];
 			                req.session.user = user;
 			                delete req.session.auth;
-				            self.emit('user-login', user);
-				            (self.authenticator instanceof events.EventEmitter) && self.authenticator.emit('user-login', user);
+				            self.emit('user-login', user, req);
+				            (self.authenticator instanceof events.EventEmitter) && self.authenticator.emit('user-login', user, req);
 			                res.json({ success : true });
 			            }
 					})

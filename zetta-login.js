@@ -222,7 +222,7 @@ function Login(core, authenticator, options) {
 
 
 
-	self.init = function(app) {
+	self.init = function(app, denyAccess) {
 		var _path = options.path || '';
 		app.get(_path+'/logout', self.getLogout);
 		app.post(_path+'/logout', self.postLogout);
@@ -232,11 +232,14 @@ function Login(core, authenticator, options) {
 
 		app.use('/login/resources', ServeStatic(path.join(__dirname, 'http')));	
 
-		app.use(function(req, res, next) {
-			if(!req.session.user)
-				return res.redirect('/login');
-			next();
-		})	
+        denyAccess = _.isUndefined(denyAccess) || denyAccess === true ? true : false;
+        if (denyAccess) {
+            app.use(function(req, res, next) {
+                if(!req.session.user)
+                    return res.redirect('/login');
+                next();
+            })
+        }
 	}
 
 	self.getClientJavaScript = function() {

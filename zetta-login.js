@@ -492,13 +492,13 @@ function MongoDbAuthenticator(core, options) {
 	var _username = options.username || 'email';
 	var _password = options.password || 'password';
 
-    core.db._database.collection('ips', function(err, collection){
+    core.db._database.collection('login_ips', function(err, collection){
         if (err)
             return console.log('Ips collection not init:', err);
         self.IpCollection = collection;
     });
 
-    core.db._database.collection('ipts', function(err, collection){
+    core.db._database.collection('login_ipts', function(err, collection){
         if (err)
             return console.log('IpTs collection not init:', err);
         self.IpTsCollection = collection;
@@ -509,7 +509,7 @@ function MongoDbAuthenticator(core, options) {
             self.IpCollection.findOne({ip: args.ip}, function (err, data) {
                 if (err)
                     return console.log('Ip collection record not found. Error:', err);
-                if (data && data.blocked) return callback({error: 'Account blocked'});
+                if (data && data.bl) return callback({error: 'Account blocked'});
 
                 auth();
             });
@@ -598,16 +598,16 @@ function MongoDbAuthenticator(core, options) {
             if (!data) {
                 self.IpCollection.insert({
                     ip: ip,
-                    success: 0,
-                    failure: 0,
-                    blocked: false
+                    s: 0, // success
+                    f: 0, // failure
+                    bl: false // blocked
                 }, {w: 1}, function(err) {
                     if (err)
                         return console.log('Login Attempt Incrementing Error', err);
                 });
             }
 
-            var exp = success ? {success : 1} : {failure: 1};
+            var exp = success ? {s : 1} : {f: 1};
             self.IpCollection && self.IpCollection.update({ip: ip}, {$inc: exp}, function (err, result) {
                 if (err)
                     return console.log('Login Attempt Incrementing Error', err);

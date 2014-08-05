@@ -91,7 +91,34 @@ function Login(core, authenticator, options) {
     };
 
 	self.getLogin = function(req, res, next) {
-		self._getLogin(options.view || path.join(__dirname, 'views/login.ejs'), req, res);
+        if (self.authenticator.IpCollection) {
+            var ip = getClientIp(req);
+
+            self.authenticator.IpCollection.findOne({ip: ip}, function (err, data) {
+                if (err)
+                    return console.log('Ip collection record not found. Error:', err);
+
+                if (data && data.bl) {
+                    res.render(options.blockPage || path.join(__dirname, 'views/block.ejs'),
+                        {}, function(err, html) {
+                            if(err) {
+                                console.log(err);
+                                return res.end("Server Error");
+                            }
+                            res.end(strip(html));
+                        });
+                    return;
+                } else {
+                    showPage();
+                }
+            });
+        } else {
+            showPage();
+        }
+
+        function showPage() {
+            self._getLogin(options.view || path.join(__dirname, 'views/login.ejs'), req, res);
+        }
 	}
 
 	self.postChallenge = function(req, res, next) {

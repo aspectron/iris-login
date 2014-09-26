@@ -80,6 +80,7 @@ function Login(core, authenticator, options) {
 	}
 
     self._getLogin = function (viewPath, req, res) {
+		res.setHeader('login-required', true);
         res.render(viewPath,
             { Client : self.getClientJavaScript() }, function(err, html) {
                 if(err) {

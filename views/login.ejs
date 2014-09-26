@@ -91,7 +91,7 @@
                 var user = $("#user").val();
                 var pass = $("#pass").val();
                 var totp = $("#totp").val();
-                $("#message").html('<center><img src="/login/resources/progress.gif"/></center>');
+                $("#message").html('<center><img src="data:image/gif;base64,R0lGODlhEgAEAKECAAAAAH9/f////////yH/C05FVFNDQVBFMi4wAwEAAAAh+QQJDwABACwAAAAAEgAEAAACB4yPqcvtrwoAIfkECQ8AAAAsAAAAABIABAAAAgyMA6m7hwyTi3FSVgAAIfkECQ8AAgAsAAAAABIABAAAAhGEIRkb6XmQYs9Fx1oVd64tFAAh+QQJDwADACwAAAAAEgAEAAACEYQxeZjhsdKI7dF55INZ9bEVACH5BAkPAAMALAAAAAASAAQAAAIRjDMJCzkMDlLMQWkrXXg3XwAAIfkECQ8AAwAsAAAAABIABAAAAhGcP6Fx4IDOYubBmFZ7OKvtFAAh+QQJDwADACwAAAAAEgAEAAACDJyPGBvpx9pzcVJWAAA7"/></center>');
                 self.post({username: user, password: pass, totpToken: totp}, function(err, ack) {
                     console.log(arguments);
                     if(err) {

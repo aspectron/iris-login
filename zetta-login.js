@@ -116,12 +116,12 @@ function Login(core, authenticator, options) {
 		});
 	}
 
-    	self.logout = function(req, res, next) {
+    self.logout = function(req, res, next) {
 		var user = req.session.user;
-		if(!user)
-			return res.send(401);
-		delete req.session.user;
-		self.emit('user-logout', user);
+		if(user){
+			delete req.session.user;
+			self.emit('user-logout', user);
+		}
 	}
 
 	self.getLogout = function(req, res, next) {

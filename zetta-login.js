@@ -102,13 +102,13 @@ function Login(core, authenticator, options) {
         var o = getLoginTracking(ip);
 
         if(options.throttle && o.unblock_ts > ts)
-            return res.json(401, { error : "Your access to the login system remains blocked for "+getDurationString(o.unblock_ts-ts), throttle : true });
+            return res.json(401, { error : "Your access to the login system remains blocked for "+getDurationString(o.unblock_ts-ts), throttle : true, ts: parseInt( (o.unblock_ts-ts) / 1000 ) });
         o.attempts++;        
         if(options.throttle && o.attempts > self.throttle.attempts) {
             o.attempts = 0;
             o.failures++;
             o.unblock_ts = ts+(self.throttle.min*((o.failures+1)/2)*60*1000);
-            return res.json(401, { error : "Your access to the login system has been blocked for "+getDurationString(o.unblock_ts-ts), throttle : true });
+            return res.json(401, { error : "Your access to the login system has been blocked for "+getDurationString(o.unblock_ts-ts), throttle : true, ts: parseInt( (o.unblock_ts-ts) / 1000 ) });
         }
 		var auth = self.authenticator.getClientAuth(function(err, auth) {
 			req.session.auth = auth;
@@ -147,7 +147,7 @@ function Login(core, authenticator, options) {
         var ip = getClientIp(req);
         var o = getLoginTracking(ip);
         if(options.throttle && o.unblock_ts > ts)
-            return res.json(401, { error : "Your access to the login system remains blocked for another "+getDurationString(o.unblock_ts-ts), throttle : true });
+            return res.json(401, { error : "Your access to the login system remains blocked for another "+getDurationString(o.unblock_ts-ts), throttle : true, ts: parseInt( (o.unblock_ts-ts) / 1000 ) });
         
         self.authenticate({ 
         	username : req.body.username, 
@@ -163,7 +163,7 @@ function Login(core, authenticator, options) {
                     o.attempts = 0;
                     o.failures++;
                     o.unblock_ts = ts+(self.throttle.min*((o.failures+1)/2)*60*1000);
-                    res.json(401, { error : "Your access to the login system has been blocked for "+getDurationString(o.unblock_ts-ts), throttle : true });
+                    res.json(401, { error : "Your access to the login system has been blocked for "+getDurationString(o.unblock_ts-ts), throttle : true, ts: parseInt( (o.unblock_ts-ts) / 1000 ) });
                 }
                 else {
 		            if(err)

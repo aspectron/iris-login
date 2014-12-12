@@ -273,12 +273,8 @@ function Authenticator(core, options) {
 		if(!text || !options.cipher)
 			return callback(null, text);
 		
-		console.log("login1".redBG.bold, arguments);
-
-
 		var key = _.isString(options.key) ? new Buffer(options.key,'hex') : options.key;
 		base58.decode(text, function(err, data) {
-			console.log("login2".redBG.bold, arguments);
 			if(err)
 				return callback(err);
 
@@ -552,10 +548,30 @@ function MongoDbAuthenticator(core, options) {
     }, 1000 * 60 * 5);
 
 	self.on('user-login', function(user) {
-		var q = { }
-		q[_username] = args.username;
-        collection.update(q, { $set : { last_login : ts }}, {safe:true}, function(err) {
-        })
+		var conf = options.updateCollection;
+		if (conf == false)
+			return;
+
+		var collection = options.collection, fieldName = 'last_login';
+		if (_.isObject(conf)) {
+			collection = conf.collection || collection;
+			fieldName  = conf.fieldName || fieldName;
+		}else if(_.isString(conf) ){
+			fieldName = conf;
+		}
+
+		var q = { }, data = {};
+		if (user[_username])
+			q[_username] = user[_username];
+		else if (user._id || user.id)
+			q._id = user._id || user.id;
+		else
+			return;
+
+		data[fieldName] = Date.now();
+		collection.update(q, { $set : data}, {safe:true}, function(err) {
+			//console.log('collection.update'.red, err)
+		})
 	});
 }
 util.inherits(MongoDbAuthenticator, Authenticator);

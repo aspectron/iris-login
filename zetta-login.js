@@ -80,6 +80,7 @@ function Login(core, authenticator, options) {
 	}
 
     self._getLogin = function (viewPath, req, res) {
+		res.setHeader('login-required', true);
         res.render(viewPath,
             { Client : self.getClientJavaScript() }, function(err, html) {
                 if(err) {
@@ -101,13 +102,13 @@ function Login(core, authenticator, options) {
         var o = getLoginTracking(ip);
 
         if(options.throttle && o.unblock_ts > ts)
-            return res.json(401, { error : "Your access to the login system remains blocked for "+getDurationString(o.unblock_ts-ts), throttle : true });
+            return res.json(401, { error : "Your access to the login system remains blocked for "+getDurationString(o.unblock_ts-ts), throttle : true, ts: parseInt( (o.unblock_ts-ts) / 1000 ) });
         o.attempts++;        
         if(options.throttle && o.attempts > self.throttle.attempts) {
             o.attempts = 0;
             o.failures++;
             o.unblock_ts = ts+(self.throttle.min*((o.failures+1)/2)*60*1000);
-            return res.json(401, { error : "Your access to the login system has been blocked for "+getDurationString(o.unblock_ts-ts), throttle : true });
+            return res.json(401, { error : "Your access to the login system has been blocked for "+getDurationString(o.unblock_ts-ts), throttle : true, ts: parseInt( (o.unblock_ts-ts) / 1000 ) });
         }
 		var auth = self.authenticator.getClientAuth(function(err, auth) {
 			req.session.auth = auth;
@@ -115,12 +116,12 @@ function Login(core, authenticator, options) {
 		});
 	}
 
-    	self.logout = function(req, res, next) {
+    self.logout = function(req, res, next) {
 		var user = req.session.user;
-		if(!user)
-			return res.send(401);
-		delete req.session.user;
-		self.emit('user-logout', user);
+		if(user){
+			delete req.session.user;
+			self.emit('user-logout', user);
+		}
 	}
 
 	self.getLogout = function(req, res, next) {
@@ -146,7 +147,7 @@ function Login(core, authenticator, options) {
         var ip = getClientIp(req);
         var o = getLoginTracking(ip);
         if(options.throttle && o.unblock_ts > ts)
-            return res.json(401, { error : "Your access to the login system remains blocked for another "+getDurationString(o.unblock_ts-ts), throttle : true });
+            return res.json(401, { error : "Your access to the login system remains blocked for another "+getDurationString(o.unblock_ts-ts), throttle : true, ts: parseInt( (o.unblock_ts-ts) / 1000 ) });
         
         self.authenticate({ 
         	username : req.body.username, 
@@ -162,7 +163,7 @@ function Login(core, authenticator, options) {
                     o.attempts = 0;
                     o.failures++;
                     o.unblock_ts = ts+(self.throttle.min*((o.failures+1)/2)*60*1000);
-                    res.json(401, { error : "Your access to the login system has been blocked for "+getDurationString(o.unblock_ts-ts), throttle : true });
+                    res.json(401, { error : "Your access to the login system has been blocked for "+getDurationString(o.unblock_ts-ts), throttle : true, ts: parseInt( (o.unblock_ts-ts) / 1000 ) });
                 }
                 else {
 		            if(err)
@@ -272,12 +273,8 @@ function Authenticator(core, options) {
 		if(!text || !options.cipher)
 			return callback(null, text);
 		
-		console.log("login1".redBG.bold, arguments);
-
-
 		var key = _.isString(options.key) ? new Buffer(options.key,'hex') : options.key;
 		base58.decode(text, function(err, data) {
-			console.log("login2".redBG.bold, arguments);
 			if(err)
 				return callback(err);
 
@@ -551,10 +548,30 @@ function MongoDbAuthenticator(core, options) {
     }, 1000 * 60 * 5);
 
 	self.on('user-login', function(user) {
-		var q = { }
-		q[_username] = args.username;
-        collection.update(q, { $set : { last_login : ts }}, {safe:true}, function(err) {
-        })
+		var conf = options.updateCollection;
+		if (conf == false)
+			return;
+
+		var collection = options.collection, fieldName = 'last_login';
+		if (_.isObject(conf)) {
+			collection = conf.collection || collection;
+			fieldName  = conf.fieldName || fieldName;
+		}else if(_.isString(conf) ){
+			fieldName = conf;
+		}
+
+		var q = { }, data = {};
+		if (user[_username])
+			q[_username] = user[_username];
+		else if (user._id || user.id)
+			q._id = user._id || user.id;
+		else
+			return;
+
+		data[fieldName] = Date.now();
+		collection.update(q, { $set : data}, {safe:true}, function(err) {
+			//console.log('collection.update'.red, err)
+		})
 	});
 }
 util.inherits(MongoDbAuthenticator, Authenticator);

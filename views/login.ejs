@@ -86,7 +86,12 @@
             $("#user").keypress(function(event) { if(event.which == 13) login(); })
             $("#pass").keypress(function(event) { if(event.which == 13) login(); })
             $("#login-button").click(function(){ login(); })
-
+            var timeIntervalId = false;
+            function clearIntervalId(){
+                if (timeIntervalId) {
+                    clearInterval(timeIntervalId);
+                };
+            }
             function login() {
                 var user = $("#user").val();
                 var pass = $("#pass").val();
@@ -101,7 +106,26 @@
                             $("#message").empty();
                             return false;
                         }
+                        var message = err.error || err || "Server Error";
+                        if (err.throttle && err.ts) {
+                            var totalSec = err.ts;
+                            clearIntervalId();
 
+                            timeIntervalId = setInterval(function(){
+                                totalSec--;
+
+                                if (totalSec <=0) {
+                                    clearIntervalId();
+                                    $("#message").html('');
+                                    return
+                                };
+
+                                var min = Math.floor(totalSec / 60);
+                                var sec = totalSec - (min*60);
+
+                                $("#message").html('Your access to the login system remains blocked for '+min+' min '+sec+' sec');
+                            }, 1000);
+                        }
                         return $("#message").html(err.error || err || "Server Error");
                     }
 

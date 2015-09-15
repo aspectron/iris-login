@@ -1,5 +1,5 @@
 var crypto = require('crypto');
-var login = require("./zetta-login")
+var login = require("./iris-login")
 var scrypt = require("./scrypt");
 
 var authenticator = new login.BasicAuthenticator({ 

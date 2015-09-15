@@ -1,6 +1,6 @@
 {
-  "name": "zetta-login",
-  "description": "Zetta Toolkit - User Login Framework",
+  "name": "iris-login",
+  "description": "IRIS Toolkit - User Login Framework",
   "version": "0.1.20",
   "author": {
     "name": "ASPECTRON Inc.",
@@ -9,7 +9,7 @@
   "dependencies": {
     "underscore" : "*",
     "serve-static" : "*",
-    "zetta-base58" : "*",
+    "iris-base58" : "*",
     "notp" : "*",
     "thirty-two" : "*"
   },
@@ -18,16 +18,16 @@
     "framework",
     "json",
     "rpc",
-    "zetta",
+    "iris",
     "login"
   ],
   "repository": {
     "type": "git",
-    "url": "git://github.com/aspectron/zetta-login"
+    "url": "git://github.com/aspectron/iris-login"
   },
-  "main" : "zetta-login.js",
+  "main" : "iris-login.js",
   "files": [
-  "zetta-login.js",
+  "iris-login.js",
   "generate.js",
   "totpgen.js",
   "scrypt.js",
@@ -46,8 +46,8 @@
   },
   "readmeFilename": "README.md",
   "bugs": {
-    "url": "https://github.com/aspectron/zetta-login/issues"
+    "url": "https://github.com/aspectron/iris-login/issues"
   },
   "license": "MIT",
-  "homepage": "https://github.com/aspectron/zetta-login"
+  "homepage": "https://github.com/aspectron/iris-login"
 }

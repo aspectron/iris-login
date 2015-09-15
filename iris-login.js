@@ -1,5 +1,5 @@
 //
-// -- Zetta Toolkit - User Login
+// -- IRIS Toolkit - User Login
 //
 //  Copyright (c) 2014 ASPECTRON Inc.
 //  All Rights Reserved.
@@ -29,7 +29,7 @@ var events = require('events');
 var util = require('util');
 var crypto = require('crypto');
 var scrypt = require('./scrypt');
-var base58 = require('zetta-base58');
+var base58 = require('iris-base58');
 var path = require('path');
 var ServeStatic = require('serve-static');
 var notp = require('notp');
@@ -576,11 +576,11 @@ function MongoDbAuthenticator(core, options) {
 }
 util.inherits(MongoDbAuthenticator, Authenticator);
 
-function ZettaRpcAuthenticator(core, options) {
+function IRISRpcAuthenticator(core, options) {
 	var self = this;
 	Authenticator.apply(self, arguments);
 	if(!options.rpc)
-		throw new Error("ZettaRpcAuthenticator requires 'rpc' arguments.");
+		throw new Error("IRISRpcAuthenticator requires 'rpc' arguments.");
 	var rpc = options.rpc;
 
 	self.authenticate = function(args, callback) {
@@ -598,7 +598,7 @@ function ZettaRpcAuthenticator(core, options) {
 		})
 	}
 }
-util.inherits(ZettaRpcAuthenticator, Authenticator);
+util.inherits(IRISRpcAuthenticator, Authenticator);
 
 
 var Client = function() {

@@ -1,4 +1,4 @@
-var login = require("./zetta-login")
+var login = require("./iris-login")
 
 var authenticator = new login.Authenticator({}, {});
 var args = process.argv.slice(2);
